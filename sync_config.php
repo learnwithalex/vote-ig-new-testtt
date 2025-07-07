@@ -34,4 +34,4 @@ exit();
 }
 
 // Call this with your actual config API
-fetchAndSaveConfig("http://localhost:3000/api/contest-info");
+fetchAndSaveConfig("https://37ca-197-210-53-16.ngrok-free.app/api/contest-info");
