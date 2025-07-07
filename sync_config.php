@@ -28,9 +28,7 @@ function fetchAndSaveConfig($url) {
     // Save time
     file_put_contents('time.txt', $data['time']);
 
-    echo "✅ Config synced successfully.\n";
-    header("Location: " . $_SERVER['REQUEST_URI']);
-exit();
+ 
 }
 
 // Call this with your actual config API
