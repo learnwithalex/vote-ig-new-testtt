@@ -1,6 +1,12 @@
 <?php
 require_once __DIR__ . '/helper.php';
 
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+    Dotenv\Dotenv::createImmutable(__DIR__)->safeLoad(); // Load .env if present
+}
+
+
 // Start the session first
 session_start();
 
