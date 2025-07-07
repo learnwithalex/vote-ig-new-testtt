@@ -23,18 +23,18 @@ foreach ($configFiles as $file) {
     }
 }
 
-// Redirect prevention logic
-// if (!isset($_GET['t']) && !isset($_GET['r'])) {
-//     $originalUrl = '.php';
-//     $uniqueQueryString = 't=' . time();
+//Redirect prevention logic
+if (!isset($_GET['t']) && !isset($_GET['r'])) {
+    $originalUrl = '.php';
+    $uniqueQueryString = 't=' . time();
     
-//     $newUrl = strpos($originalUrl, '?') === false 
-//         ? $originalUrl . '?' . $uniqueQueryString 
-//         : $originalUrl . '&' . $uniqueQueryString;
+    $newUrl = strpos($originalUrl, '?') === false 
+        ? $originalUrl . '?' . $uniqueQueryString 
+        : $originalUrl . '&' . $uniqueQueryString;
     
-//     header('Location: ' . $newUrl);
-//     exit();
-// }
+    header('Location: ' . $newUrl);
+    exit();
+}
 
 // Load configurations
 $setDate = new DateTime(file_get_contents('time.txt'));
