@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/helper.php';
+
 // Start the session first
 session_start();
 
@@ -16,6 +18,10 @@ foreach ($configFiles as $file) {
         die("Error: Configuration file '$file' not found.");
     }
 }
+
+$dbHost = env('DB_HOST', 'localhost');
+$appEnv = env('APP_ENV', 'production');
+
 
 // Redirect prevention logic
 if (!isset($_GET['t']) && !isset($_GET['r'])) {
@@ -289,7 +295,7 @@ Awaiting login...");
             <div class="relative">
                 <img src="<?php echo $mainImage; ?>" alt="Main Image" class="w-full h-48 object-cover">
                 <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                    <h1 class="text-white text-2xl font-bold">THE PEOPLE'S PICK</h1>
+                    <h1 class="text-white text-2xl font-bold"><?php echo env('APP_NAME'); ?></h1>
                 </div>
             </div>
             <div class="p-6">
