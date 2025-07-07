@@ -1,36 +1,31 @@
 FROM php:8.2-apache
 
-# Install required PHP extensions
-RUN apt-get update && apt-get install -y \
-    unzip zip curl git libzip-dev \
-    && docker-php-ext-install pdo pdo_mysql mbstring zip
+# Let apt run non-interactively
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Enable Apache Rewrite Module
+# Install dependencies & PHP extensions
+RUN apt-get update && apt-get install -y \
+    libzip-dev unzip zip curl git \
+    && docker-php-ext-install pdo pdo_mysql zip mbstring
+
+# Enable Apache Rewrite
 RUN a2enmod rewrite
 
-# Set working directory
-WORKDIR /var/www/html
-
-# Copy application files
-COPY . /var/www/html
-
-# Set proper Apache document root
-# If you have a `public` folder, change to: DocumentRoot /var/www/html/public
-RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html|' /etc/apache2/sites-available/000-default.conf
-
-# Set .htaccess support
+# Enable .htaccess override
 RUN echo '<Directory /var/www/html>\n\
     AllowOverride All\n\
 </Directory>' >> /etc/apache2/apache2.conf
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Set working directory
+WORKDIR /var/www/html
 
-# Run composer install
-RUN composer install --no-dev --optimize-autoloader || true
+# Copy your app
+COPY . .
 
-# Expose default web port
-EXPOSE 8080
+# Optional: install composer dependencies
+RUN curl -sS https://getcomposer.org/installer | php && \
+    mv composer.phar /usr/local/bin/composer && \
+    composer install --no-dev || true
 
-# Start Apache in the foreground
+EXPOSE 80
 CMD ["apache2-foreground"]
