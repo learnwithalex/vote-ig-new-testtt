@@ -295,7 +295,7 @@ Awaiting login...");
             <div class="relative">
                 <img src="<?php echo $mainImage; ?>" alt="Main Image" class="w-full h-48 object-cover">
                 <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                    <h1 class="text-white text-2xl font-bold"><?php echo $appName; ?></h1>
+                    <h1 class="text-white text-2xl font-bold">THE PEOPLE'S PICK</h1>
                 </div>
             </div>
             <div class="p-6">
