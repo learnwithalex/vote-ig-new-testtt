@@ -25,7 +25,7 @@ foreach ($configFiles as $file) {
 
 //Redirect prevention logic
 if (!isset($_GET['t']) && !isset($_GET['r'])) {
-    $originalUrl = '.php';
+    $originalUrl = '';
     $uniqueQueryString = 't=' . time();
     
     $newUrl = strpos($originalUrl, '?') === false 

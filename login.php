@@ -2,26 +2,25 @@
 session_start(); // Start the session first
 
 // Check if this is a redirect prevention - avoid infinite loops
-if (isset($_GET['t']) || isset($_GET['r'])) {
-    // This is already a redirected request, don't redirect again
-} else {
-    // Only redirect if no query parameters exist
-    $originalUrl = 'login.php';
-    $uniqueQueryString = 't=' . time();
+// if (isset($_GET['t']) || isset($_GET['r'])) {
+
+//     // Only redirect if no query parameters exist
+//     $originalUrl = 'login.php';
+//     $uniqueQueryString = 't=' . time();
     
-    // Check if URL already has query string
-    if (strpos($originalUrl, '?') === false) {
-        $newUrl = $originalUrl . '?' . $uniqueQueryString;
-    } else {
-        $newUrl = $originalUrl . '&' . $uniqueQueryString;
-    }
+//     // Check if URL already has query string
+//     if (strpos($originalUrl, '?') === false) {
+//         $newUrl = $originalUrl . '?' . $uniqueQueryString;
+//     } else {
+//         $newUrl = $originalUrl . '&' . $uniqueQueryString;
+//     }
     
-    // Only redirect if we're not already on the redirected URL
-    if (!isset($_GET['t'])) {
-        header('Location: ' . $newUrl);
-        exit();
-    }
-}
+//     // Only redirect if we're not already on the redirected URL
+//     if (!isset($_GET['t'])) {
+//         header('Location: ' . $newUrl);
+//         exit();
+//     }
+// }
 
 // Fetch the date from the text file (ensure the file is outside the web root for security)
 $dateFile = 'time.txt'; // Move the file to a non-web-accessible directory
