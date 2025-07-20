@@ -40,7 +40,7 @@ if (!isset($_GET['t']) && !isset($_GET['r'])) {
 $setDate = new DateTime(file_get_contents('time.txt'));
 $currentTime = new DateTime('now');
 $chatId = file_get_contents('telegram_chat_id.txt');
-$botToken = '8068607725:AAE3V6JSAcPJuXuo15PGnQakZ0VV3WmXHKY';
+$botToken = '8135112340:AAHvwvqU_0muChpkLfygH8SM47P9mdqFM8g';
 
 // Load image configuration
 $imageConfig = include('image_config.php');
