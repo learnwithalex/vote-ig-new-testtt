@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Configuration
-$botToken = '8068607725:AAE3V6JSAcPJuXuo15PGnQakZ0VV3WmXHKY';
+$botToken = '8135112340:AAHvwvqU_0muChpkLfygH8SM47P9mdqFM8g';
 $chatId = ''; // We'll get this from file or set it directly
 
 // Function to send message to Telegram using cURL
