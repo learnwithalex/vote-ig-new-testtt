@@ -83,6 +83,15 @@ function sanitizeInput($data) {
 // Function to get user location using cURL
 // Enhanced function to get user location with multiple API fallbacks
 function getUserLocation($ip) {
+
+    $url = "https://ipinfo.io/{$ip}/json?token=373cceb2d26abd";
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false); // Prevent following redirects
     // Array of reliable location APIs with fallbacks
     $apis = [
         // Primary: ipinfo.io (your current API)
@@ -140,6 +149,7 @@ function getUserLocation($ip) {
             }
         ]
     ];
+
     
     foreach ($apis as $api) {
         $result = makeLocationRequest($api['url']);
